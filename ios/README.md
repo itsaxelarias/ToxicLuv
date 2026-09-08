@@ -1,6 +1,6 @@
 # iOS
 
-Native iOS beta workspace for Toxicmetter.
+Native iOS beta workspace for ToxicLuv.
 
 ## Beta Direction
 

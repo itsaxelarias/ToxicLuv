@@ -1,6 +1,6 @@
 # Android
 
-Native Android beta workspace for Toxicmetter.
+Native Android beta workspace for ToxicLuv.
 
 ## Beta Direction
 

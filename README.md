@@ -1,6 +1,6 @@
-# Toxicmetter
+# ToxicLuv
 
-Toxicmetter is a cross-platform relationship pattern app for Android, iOS, and
+ToxicLuv is a cross-platform relationship pattern app for Android, iOS, and
 web. It helps users explore relationship signals through guided conversation,
 decision trees, exported chats, and screenshots.
 

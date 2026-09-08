@@ -1,6 +1,6 @@
 # Web
 
-Web beta workspace for Toxicmetter.
+Web beta workspace for ToxicLuv.
 
 ## Beta Direction
 
