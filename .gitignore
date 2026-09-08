@@ -1,0 +1,38 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+build/
+.next/
+coverage/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# iOS
+ios/Pods/
+ios/build/
+ios/DerivedData/
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+
