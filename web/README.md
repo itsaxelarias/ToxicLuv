@@ -1,6 +1,6 @@
 # Web
 
-Web beta workspace for Relatio AI.
+Web beta workspace for Toxicmetter.
 
 ## Beta Direction
 
@@ -29,4 +29,3 @@ Recommended stack:
 - Exported chat
 - Screenshots and images
 - Not sure where to start
-

@@ -1,6 +1,6 @@
 # iOS
 
-Native iOS beta workspace for Relatio AI.
+Native iOS beta workspace for Toxicmetter.
 
 ## Beta Direction
 
@@ -29,4 +29,3 @@ Recommended stack:
 - Exported chat
 - Screenshots and images
 - Not sure where to start
-

@@ -1,6 +1,6 @@
 # Android
 
-Native Android beta workspace for Relatio AI.
+Native Android beta workspace for Toxicmetter.
 
 ## Beta Direction
 
@@ -28,4 +28,3 @@ Recommended stack:
 - Exported chat
 - Screenshots and images
 - Not sure where to start
-

@@ -1,8 +1,8 @@
-# Relatio AI
+# Toxicmetter
 
-Relatio AI is a cross-platform relationship clarity app for Android, iOS, and web.
-It helps users explore relationship patterns through guided conversation, decision
-trees, exported chats, and screenshots.
+Toxicmetter is a cross-platform relationship pattern app for Android, iOS, and
+web. It helps users explore relationship signals through guided conversation,
+decision trees, exported chats, and screenshots.
 
 The product must avoid clinical or legal verdicts such as "your partner is toxic."
 Instead, it should identify patterns, confidence levels, safety signals, and next
@@ -63,4 +63,3 @@ The first beta should prove the core loop:
 3. Answer questions or upload sample text.
 4. Receive a pattern summary with a risk level.
 5. See grounded next steps and safety resources.
-
