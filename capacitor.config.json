@@ -1,0 +1,8 @@
+{
+  "appId": "com.toxicluv.app",
+  "appName": "ToxicLuv",
+  "webDir": "web/dist",
+  "android": {
+    "backgroundColor": "#171117"
+  }
+}
