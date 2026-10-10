@@ -48,6 +48,13 @@ export type Pattern = {
   description: string;
   value: number;
   tone: "positive" | "watch" | "risk";
+  intensity: "Leve" | "Presente" | "Marcada";
+};
+
+export type Evidence = {
+  label: string;
+  dimensions: string[];
+  severity: number;
 };
 
 export type AssessmentResult = {
@@ -59,6 +66,12 @@ export type AssessmentResult = {
   patterns: Pattern[];
   sourceIds: string[];
   urgent: boolean;
+  primaryPattern: string;
+  patternExplanation: string;
+  consistency: "Inicial" | "Moderada" | "Alta";
+  evidence: Evidence[];
+  protectiveFactors: string[];
+  observedAreas: number;
 };
 
 export type Reference = {
@@ -498,7 +511,7 @@ function riskTotal(scores: Scores) {
   return scores.safety * 1.8 + scores.sexual * 1.7 + scores.control * 1.25 + scores.isolation * 1.2 + scores.financial * 1.1 + scores.digital + scores.emotional + scores.autonomy + scores.repair * 0.8 + scores.conflict * 0.65 + scores.trust * 0.6;
 }
 
-export function buildResult(scores: Scores, flags: Set<RiskFlag>): AssessmentResult {
+export function buildResult(scores: Scores, flags: Set<RiskFlag>, history: HistoryEntry[] = []): AssessmentResult {
   const urgent = flags.has("immediate_danger") || scores.safety >= 8 || scores.sexual >= 7;
   const rawRisk = riskTotal(scores);
   const score = Math.max(0, Math.min(10, Math.round(rawRisk / 4.2 - scores.healthy * 0.18)));
@@ -539,8 +552,56 @@ export function buildResult(scores: Scores, flags: Set<RiskFlag>): AssessmentRes
     ...DIMENSION_COPY[key],
     value: scores[key],
     tone: scores[key] >= 5 ? "risk" : "watch",
+    intensity: scores[key] >= 5 ? "Marcada" : scores[key] >= 3 ? "Presente" : "Leve",
   }));
-  if (scores.healthy >= 3) patterns.push({ key: "healthy", ...DIMENSION_COPY.healthy, value: scores.healthy, tone: "positive" });
+  if (scores.healthy >= 3) patterns.push({ key: "healthy", ...DIMENSION_COPY.healthy, value: scores.healthy, tone: "positive", intensity: scores.healthy >= 7 ? "Marcada" : "Presente" });
+
+  const riskKeys = (Object.keys(DIMENSION_COPY) as Dimension[]).filter((key) => key !== "healthy");
+  const evidence = history
+    .map((entry) => {
+      const dimensions = riskKeys
+        .filter((key) => (entry.impact[key] ?? 0) > 0)
+        .sort((a, b) => (entry.impact[b] ?? 0) - (entry.impact[a] ?? 0));
+      return {
+        label: entry.label,
+        dimensions: dimensions.slice(0, 2).map((key) => DIMENSION_COPY[key].label),
+        severity: Math.max(0, ...dimensions.map((key) => entry.impact[key] ?? 0)),
+      };
+    })
+    .filter((item) => item.severity >= 2)
+    .sort((a, b) => b.severity - a.severity)
+    .slice(0, 4);
+  const protectiveFactors = history
+    .filter((entry) => (entry.impact.healthy ?? 0) >= 2)
+    .map((entry) => entry.label)
+    .slice(0, 3);
+  const observedAreas = riskDimensions.filter((key) => scores[key] >= 2).length;
+  const consistency: AssessmentResult["consistency"] = level === "Fortalezas"
+    ? protectiveFactors.length >= 3 ? "Alta" : protectiveFactors.length >= 2 ? "Moderada" : "Inicial"
+    : urgent || observedAreas >= 3 || evidence.length >= 4
+      ? "Alta"
+      : observedAreas >= 2 || evidence.length >= 2
+        ? "Moderada"
+        : "Inicial";
+
+  let primaryPattern = "Respeto y reciprocidad";
+  let patternExplanation = "Predominan respuestas asociadas con autonomía, cuidado mutuo y capacidad de reparar los desacuerdos.";
+  if (urgent) {
+    primaryPattern = "Riesgo para tu seguridad";
+    patternExplanation = "Las respuestas incluyen miedo, coerción, amenazas o agresión. Estas señales tienen prioridad sobre cualquier aspecto positivo de la relación.";
+  } else if (scores.control + scores.isolation + scores.digital + scores.financial + scores.autonomy >= 8) {
+    primaryPattern = "Control y pérdida de autonomía";
+    patternExplanation = "Varias respuestas apuntan a vigilancia, restricciones o presión sobre tus decisiones y relaciones.";
+  } else if (scores.sexual >= 3) {
+    primaryPattern = "Límites y consentimiento debilitados";
+    patternExplanation = "Aparece presión sobre decisiones corporales o sexuales. El consentimiento necesita ser libre, claro y reversible.";
+  } else if (scores.emotional + scores.repair + scores.conflict >= 7) {
+    primaryPattern = "Desgaste emocional sin reparación suficiente";
+    patternExplanation = "Los conflictos parecen dejar culpa, invalidación o promesas de cambio que no se sostienen en el tiempo.";
+  } else if (rawRisk > 5) {
+    primaryPattern = "Señales mixtas que necesitan observación";
+    patternExplanation = "Hay aspectos saludables, pero también conductas que afectan tu tranquilidad o tus límites y conviene observar su repetición.";
+  }
 
   const sourceIds = new Set<string>(["relationship-spectrum"]);
   if (scores.control || scores.isolation || scores.financial || scores.digital) sourceIds.add("power-control");
@@ -549,7 +610,20 @@ export function buildResult(scores: Scores, flags: Set<RiskFlag>): AssessmentRes
   if (level === "Fortalezas") sourceIds.add("seven-principles");
   if (urgent || level === "Alto") sourceIds.add("ecuador-help");
 
-  return { level, score: urgent ? Math.max(score, 9) : score, ...copy[level], patterns, sourceIds: [...sourceIds], urgent };
+  return {
+    level,
+    score: urgent ? Math.max(score, 9) : score,
+    ...copy[level],
+    patterns,
+    sourceIds: [...sourceIds],
+    urgent,
+    primaryPattern,
+    patternExplanation,
+    consistency,
+    evidence,
+    protectiveFactors,
+    observedAreas,
+  };
 }
 
 export const TOTAL_ANSWER_OPTIONS = Object.values(QUESTIONS).reduce((total, question) => total + question.answers.length, 0);

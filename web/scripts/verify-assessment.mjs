@@ -24,7 +24,8 @@ for (const answer of [
   "Se alegra",
   "Hay cariño",
 ]) await choose(desktop, answer);
-await desktop.getByText("Aparecen bases saludables").waitFor();
+await desktop.getByText("Respeto y reciprocidad").waitFor();
+await desktop.getByText("También aparecen factores protectores").waitFor();
 await desktop.screenshot({ path: "toxicluv-healthy-desktop.png", fullPage: true });
 
 const ambiguous = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -38,7 +39,8 @@ for (const answer of [
   "No siempre lo entiende",
   "Estamos distantes",
 ]) await choose(ambiguous, answer);
-await ambiguous.getByText("Hay patrones que conviene observar").waitFor();
+await ambiguous.getByText("Desgaste emocional sin reparación suficiente").waitFor();
+await ambiguous.getByText("Lo que sustenta esta lectura").waitFor();
 await ambiguous.screenshot({ path: "toxicluv-attention-mobile.png", fullPage: true });
 
 const urgent = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -48,7 +50,8 @@ for (const answer of [
   "temo su reacción",
   "Golpes, empujones",
 ]) await choose(urgent, answer);
-await urgent.getByText("Tu seguridad merece atención inmediata").waitFor();
+await urgent.getByText("Riesgo para tu seguridad").waitFor();
+await urgent.getByText("Lo que sustenta esta lectura").waitFor();
 await urgent.getByRole("link", { name: /Llamar al 911/ }).waitFor();
 await urgent.screenshot({ path: "toxicluv-urgent-mobile.png", fullPage: true });
 

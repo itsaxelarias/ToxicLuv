@@ -44,4 +44,18 @@ describe("adaptive relationship assessment", () => {
     const result = buildResult({ ...EMPTY_SCORES, healthy: 2, conflict: 3, repair: 3, emotional: 2 }, new Set());
     expect(result.level).toBe("Atención");
   });
+
+  it("explains the result with concrete evidence from the selected answers", () => {
+    const history = [
+      { questionId: "start", answerId: "fear", label: "A veces siento miedo de su reacción", impact: { safety: 3, emotional: 2 }, flags: [] },
+      { questionId: "boundaries", answerId: "blame", label: "Termino sintiéndome culpable por poner límites", impact: { control: 3, autonomy: 2 }, flags: [] },
+    ];
+    const scores = history.reduce((current, entry) => addImpact(current, entry.impact), { ...EMPTY_SCORES });
+    const result = buildResult(scores, new Set(), history);
+
+    expect(result.evidence.map((item) => item.label)).toContain("A veces siento miedo de su reacción");
+    expect(result.observedAreas).toBeGreaterThanOrEqual(2);
+    expect(result.consistency).toBe("Alta");
+    expect(result.patternExplanation.length).toBeGreaterThan(30);
+  });
 });

@@ -54,7 +54,7 @@ export function App() {
   const [story, setStory] = useState("");
   const currentQuestion = QUESTIONS[questionId];
   const assessmentState = useMemo(() => calculateState(history), [history]);
-  const result = useMemo(() => buildResult(assessmentState.scores, assessmentState.flags), [assessmentState]);
+  const result = useMemo(() => buildResult(assessmentState.scores, assessmentState.flags, history), [assessmentState, history]);
 
   function handleRegister(event: FormEvent) {
     event.preventDefault();
@@ -114,7 +114,7 @@ export function App() {
     setHistory([{
       questionId: "story",
       answerId: "free-text",
-      label: "Relato libre analizado en modo beta",
+      label: `En tu relato: “${story.trim().slice(0, 140)}${story.trim().length > 140 ? "…" : ""}”`,
       impact,
       flags: normalized.includes("arma") || normalized.includes("mata") ? ["immediate_danger"] : [],
     }]);
@@ -130,7 +130,7 @@ export function App() {
   return <main className={`app theme-${gender}`}>
     {step === "register" ? <div className="onboarding">
       <section className="visual-pane" onPointerMove={moveArtwork} onPointerLeave={(event) => { event.currentTarget.style.setProperty("--mx", "0"); event.currentTarget.style.setProperty("--my", "0"); }}>
-        <img className="hero-art" src="/assets/toxicluv-clarity.png" alt="Dos formas de cristal conectadas por un haz de luz" />
+        <img className="hero-art" src="/assets/toxicluv-clarity.png" width="1122" height="1402" alt="Dos formas de cristal conectadas por un haz de luz" fetchPriority="high" />
         <div className="art-wash" />
         <div className="art-content">
           <Brand />
@@ -140,8 +140,8 @@ export function App() {
       </section>
       <section className="auth-pane"><div className="mobile-brand"><Brand /></div><form className="auth-card" onSubmit={handleRegister}>
         <div className="auth-heading"><span className="step-number">01</span><div><span>Comienza aquí</span><h2>Crea tu espacio personal</h2><p>Solo tomará un momento.</p></div></div>
-        <label>Nombre<span className="input-wrap"><UserRound size={18} /><input value={name} onChange={(event) => setName(event.target.value)} placeholder="¿Cómo quieres que te llamemos?" required /></span></label>
-        <label>Correo electrónico<span className="input-wrap"><Mail size={18} /><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="tu@correo.com" required /></span></label>
+        <label>Nombre<span className="input-wrap"><UserRound size={18} aria-hidden="true" /><input name="name" autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="¿Cómo quieres que te llamemos?" required /></span></label>
+        <label>Correo electrónico<span className="input-wrap"><Mail size={18} aria-hidden="true" /><input name="email" type="email" autoComplete="email" spellCheck={false} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="tu@correo.com" required /></span></label>
         <fieldset><legend>Personaliza tu experiencia</legend><div className="segmented"><button type="button" className={gender === "woman" ? "active" : ""} onClick={() => setGender("woman")}>Mujer</button><button type="button" className={gender === "man" ? "active" : ""} onClick={() => setGender("man")}>Hombre</button></div></fieldset>
         <button className="primary" type="submit"><span>Entrar a mi espacio</span><ArrowRight size={19} /></button>
         <p className="legal"><Lock size={13} /> Tus datos permanecen en este dispositivo durante la beta.</p>
@@ -156,7 +156,8 @@ export function App() {
           <div className="privacy-chip"><ShieldCheck size={17} /><span><strong>Espacio confidencial</strong>Tu información no se comparte</span></div>
         </aside>
 
-        <section className="content-pane">
+        <section className="content-pane" id="main-content">
+          <div className="view-transition" key={`${step}-${step === "tree" ? questionId : "screen"}`}>
           {step === "modes" && <>
             <div className="page-heading"><span className="overline"><span /> Hola, {name || "qué gusto verte"}</span><h2>¿Cómo quieres empezar?</h2><p>Elige la forma que se sienta más cómoda para ti hoy.</p></div>
             <div className="mode-grid">{modes.map((mode) => {
@@ -175,14 +176,14 @@ export function App() {
               <div className="question-count"><strong>{String(history.length + 1).padStart(2, "0")}</strong><span>recorrido adaptativo</span></div>
               <div className="question-card"><span className="overline"><span /> {currentQuestion.theme}</span><h2>{currentQuestion.text}</h2><p>{currentQuestion.detail}</p></div>
             </div>
-            <div className="answers">{currentQuestion.answers.map((answer, index) => <button key={answer.id} onClick={() => answerQuestion(answer)}><span className="answer-letter">{String.fromCharCode(65 + index)}</span><strong>{answer.label}</strong><ChevronRight size={18} /></button>)}</div>
+            <div className="answers">{currentQuestion.answers.map((answer, index) => <button key={answer.id} onClick={() => answerQuestion(answer)}><span className="answer-letter">{String.fromCharCode(65 + index)}</span><strong>{answer.label}</strong><ChevronRight size={18} aria-hidden="true" /></button>)}</div>
             <p className="adaptive-note"><Sparkles size={14} /> Las siguientes preguntas cambian según los patrones que marcas.</p>
           </>}
 
           {step === "chat" && <>
             <Back onClick={() => setStep("modes")} />
             <div className="page-heading compact"><span className="overline"><span /> Conversación guiada</span><h2>Cuéntame qué está pasando</h2><p>Escribe como lo dirías a alguien de confianza. No necesitas ordenar todo primero.</p></div>
-            <div className="story-box"><textarea value={story} onChange={(event) => setStory(event.target.value)} placeholder="Por ejemplo: cuando intento poner límites, me culpa y después actúa como si nada..." /><span>{story.length} caracteres</span></div>
+            <div className="story-box"><label htmlFor="relationship-story">Describe lo que ocurre</label><textarea id="relationship-story" name="relationship-story" autoComplete="off" value={story} onChange={(event) => setStory(event.target.value)} placeholder="Por ejemplo: cuando intento poner límites, me culpa y después actúa como si nada…" /><span>{story.length} caracteres</span></div>
             <button className="primary action-button" onClick={finishStory} disabled={story.trim().length < 20}>Analizar mi relato <ArrowRight size={18} /></button>
           </>}
 
@@ -192,6 +193,7 @@ export function App() {
           </>}
 
           {step === "result" && <ResultView result={result} history={history} onReset={resetTree} />}
+          </div>
         </section>
       </div>
     </div>}
@@ -201,23 +203,45 @@ export function App() {
 function ResultView({ result, history, onReset }: { result: ReturnType<typeof buildResult>; history: HistoryEntry[]; onReset: () => void }) {
   const references = REFERENCES.filter((reference) => result.sourceIds.includes(reference.id));
   return <div className={`result-view result-view-${result.level.toLowerCase()}`}>
-    <span className={`result-badge result-${result.level.toLowerCase()}`}><AlertTriangle size={17} /> {result.level}</span>
-    <div className="result-score"><strong>{result.score}</strong><span>/ 10</span></div>
-    <h2>{result.title}</h2>
-    <p className="result-copy">{result.description}</p>
+    <div className="result-header">
+      <div>
+        <span className={`result-badge result-${result.level.toLowerCase()}`}><AlertTriangle size={17} aria-hidden="true" /> Nivel {result.level}</span>
+        <h2>{result.primaryPattern}</h2>
+        <p className="result-copy">{result.patternExplanation}</p>
+      </div>
+      <div className="result-consistency"><span>Consistencia</span><strong>{result.consistency}</strong><small>{history.length} respuestas · {result.level === "Fortalezas" ? `${result.protectiveFactors.length} factores protectores` : `${result.observedAreas} áreas coinciden`}</small></div>
+    </div>
+
+    <div className="result-context" role="note">
+      <strong>{result.title}</strong>
+      <p>{result.description}</p>
+    </div>
 
     {result.urgent && <div className="urgent-help">
       <div><Phone size={21} /><span><strong>¿Hay peligro ahora?</strong>Llama al 911 desde un lugar seguro.</span></div>
       <a href="tel:911">Llamar al 911 <ArrowRight size={17} /></a>
     </div>}
 
-    <div className="pattern-grid">
-      {result.patterns.map((pattern) => <div className={`pattern-item pattern-${pattern.tone}`} key={pattern.key}><span>{pattern.label}</span><strong>{pattern.tone === "positive" ? "Fortaleza presente" : pattern.value >= 5 ? "Señal marcada" : "Conviene observar"}</strong><p>{pattern.description}</p></div>)}
-    </div>
+    {result.evidence.length > 0 && <section className="evidence-section">
+      <div className="section-heading"><span>Lo que sustenta esta lectura</span><p>No son suposiciones: son las conductas que marcaste en el recorrido.</p></div>
+      <div className="evidence-list">{result.evidence.map((item, index) => <article key={`${item.label}-${index}`}>
+        <span>{String(index + 1).padStart(2, "0")}</span>
+        <div><blockquote>“{item.label}”</blockquote><p>{item.dimensions.join(" · ")}</p></div>
+      </article>)}</div>
+    </section>}
+
+    <section className="pattern-section">
+      <div className="section-heading"><span>Áreas observadas</span><p>La intensidad describe cuánta evidencia apareció; no es una probabilidad clínica.</p></div>
+      <div className="pattern-grid">
+        {result.patterns.map((pattern) => <div className={`pattern-item pattern-${pattern.tone}`} key={pattern.key}><span>{pattern.label}</span><strong>{pattern.tone === "positive" ? "Factor protector" : `${pattern.intensity}`}</strong><p>{pattern.description}</p><div className="pattern-meter" aria-hidden="true"><span style={{ width: pattern.intensity === "Marcada" ? "88%" : pattern.intensity === "Presente" ? "62%" : "34%" }} /></div></div>)}
+      </div>
+    </section>
+
+    {result.protectiveFactors.length > 0 && <div className="protective-factors"><ShieldCheck size={20} aria-hidden="true" /><div><strong>También aparecen factores protectores</strong>{result.protectiveFactors.map((factor) => <p key={factor}>{factor}</p>)}</div></div>}
 
     <div className="actions"><span>Próximos pasos</span>{result.actions.map((action) => <div key={action}><Check size={17} /><strong>{action}</strong></div>)}</div>
 
-    <details className="journey-summary"><summary>Ver las {history.length} respuestas de este recorrido</summary><div>{history.map((entry, index) => <p key={`${entry.questionId}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span>{entry.label}</p>)}</div></details>
+    <details className="journey-summary"><summary>Revisar las {history.length} respuestas de este recorrido</summary><div>{history.map((entry, index) => <p key={`${entry.questionId}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span>{entry.label}</p>)}</div></details>
 
     <section className="references"><div className="reference-heading"><BookOpen size={19} /><div><strong>En qué se basa esta orientación</strong><span>Fuentes y lecturas relacionadas con tus respuestas</span></div></div><div className="reference-list">{references.map((reference) => reference.url ? <a href={reference.url} target="_blank" rel="noreferrer" key={reference.id}><span>{reference.kind}</span><strong>{reference.title}</strong><small>{reference.author}</small><ExternalLink size={15} /></a> : <div key={reference.id}><span>{reference.kind}</span><strong>{reference.title}</strong><small>{reference.author}</small></div>)}</div></section>
 
